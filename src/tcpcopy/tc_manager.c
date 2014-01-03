@@ -316,7 +316,7 @@ connect_to_server(tc_event_loop_t *event_loop)
 
         }
 
-        tc_log_info(LOG_NOTICE, 0, "add dr tunnels for exchanging info:%u:%u",
+        tc_log_info(LOG_NOTICE, 0, "add dr tunnels for exchanging info:%#x:%u",
                 target_ip, target_port);
     }
 

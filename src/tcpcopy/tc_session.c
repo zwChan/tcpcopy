@@ -2114,6 +2114,7 @@ fake_syn(session_t *s, tc_ip_header_t *ip_header,
 #endif
     uint16_t  target_port;
     uint64_t  new_key;
+	int get_port_cnt = 0;
 
     if (is_hard) {
         tc_log_debug1(LOG_DEBUG, 0, "fake syn hard:%u", s->src_h_port);
@@ -2127,11 +2128,15 @@ fake_syn(session_t *s, tc_ip_header_t *ip_header,
             } else {
                 tc_log_info(LOG_NOTICE, 0, "already exist:%u", s->src_h_port);
             }
+			if (++get_port_cnt > 10000) {
+				tc_log_info(LOG_NOTICE, 0, "error! after try 10000 times, can not get a rand target port.", s->src_h_port);
+				return;
+			}
         }
 
         hash_add(tf_port_table, new_key, (void *) (long) s->orig_src_port);
         tcp_header->source = target_port;
-        s->faked_src_port  = tcp_header->source;
+        s->faked_src_port  = target_port;
         s->sm.port_transfered = 1;
 
     } else {
