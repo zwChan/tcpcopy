@@ -625,12 +625,34 @@ tc_socket_listen(int fd, const char *bind_ip, uint16_t port)
     return TC_OK;
 }
 
+// tv_begin have to be init to 0 at first time call this func
+bool 
+is_socket_timeout(struct timeval *tv_begin)
+{
+    struct timeval tv_end;
+
+    if (!tv_begin->tv_sec && !tv_begin->tv_usec) {
+        //first time enter
+        gettimeofday(tv_begin, NULL);
+        return false;
+    } else {
+        gettimeofday(&tv_end, NULL);
+        if (SOCKET_RW_TIME_OUT  < (1000000 * (tv_end.tv_sec - tv_begin->tv_sec) + tv_end.tv_usec - tv_begin->tv_usec)){
+            return true;
+        }else{
+            return false;
+        }
+    }
+}
+
+
 int
 tc_socket_recv(int fd, char *buffer, ssize_t len)
 {
     int     cnt = 0;
     size_t  last;
     ssize_t n;
+    struct timeval  tv_begin = {0};
 
     last = 0;
 
@@ -639,7 +661,7 @@ tc_socket_recv(int fd, char *buffer, ssize_t len)
 
         if (n == -1) {
             if (errno == EAGAIN || errno == EINTR) {
-                if (cnt > MAX_RW_TRIES) {
+                if (cnt > MAX_RW_TRIES && is_socket_timeout(&tv_begin)) {
                     tc_log_info(LOG_ERR, 0, "recv timeout,fd:%d", fd);
                     return TC_ERROR;
                 }
@@ -674,23 +696,29 @@ tc_socket_cmb_recv(int fd, int *num, char *buffer)
     size_t  last;
     ssize_t n, len;
 
+    struct timeval  tv_begin = {0};
+
     last = 0;
     len = sizeof(uint16_t);
+    
+
 
     for ( ;; ) {
         n = recv(fd, buffer + last, len, 0);
 
         if (n == -1) {
             if (errno == EAGAIN || errno == EINTR) {
-                if (cnt > MAX_RW_TRIES) {
-                    tc_log_info(LOG_ERR, 0, "recv timeout,fd:%d", fd);
+                if (errno == EAGAIN || errno == EINTR) {
+                    if (cnt > MAX_RW_TRIES && is_socket_timeout(&tv_begin)) {
+                        tc_log_info(LOG_ERR, 0, "recv timeout,fd:%d", fd);
+                        return TC_ERROR;
+                    }
+                    cnt++;
+                    continue;
+                } else {
+                    tc_log_info(LOG_NOTICE, errno, "return -1,fd:%d", fd);
                     return TC_ERROR;
                 }
-                cnt++;
-                continue;
-            } else {
-                tc_log_info(LOG_NOTICE, errno, "return -1,fd:%d", fd);
-                return TC_ERROR;
             }
         }
 
@@ -739,6 +767,7 @@ tc_socket_send(int fd, char *buffer, int len)
     int         cnt = 0;
     ssize_t     send_len, offset = 0, num_bytes;
     const char *ptr;
+    struct timeval  tv_begin = {0};
 
     if (len <= 0) {
         return TC_OK;
@@ -753,7 +782,7 @@ tc_socket_send(int fd, char *buffer, int len)
 
         if (send_len == -1) {
 
-            if (cnt > MAX_RW_TRIES) {
+            if (cnt > MAX_RW_TRIES && is_socket_timeout(&tv_begin)) {
                 tc_log_info(LOG_ERR, 0, "send timeout,fd:%d", fd);
                 return TC_ERROR;
             }

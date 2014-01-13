@@ -633,6 +633,9 @@ check_read_stop()
     return false;
 }
 
+unsigned int cnt10=0,cnt11=0,cnt12=0;
+
+
 static void 
 send_packets_from_pcap(int first)
 {
@@ -657,6 +660,9 @@ send_packets_from_pcap(int first)
         pkt_data = (u_char *) pcap_next(pcap, &pkt_hdr);
         if (pkt_data != NULL) {
 
+            cnt10++;
+
+
             if (pkt_hdr.caplen < pkt_hdr.len) {
 
                 tc_log_info(LOG_WARN, 0, "truncated packets,drop");
@@ -679,8 +685,13 @@ send_packets_from_pcap(int first)
                     frame = ip_data - ETHERNET_HDR_LEN;
                     dispose_packet(frame, ip_pack_len + ETHERNET_HDR_LEN,
                             ip_pack_len, &p_valid_flag);
+
+                    cnt11++;
+                    tc_log_info(LOG_WARN, 0, "pcap send %u:%u:%u: len is %d,vliad=%u",cnt12, cnt11,cnt10,pkt_hdr.len,p_valid_flag);
+
                     if (p_valid_flag) {
 
+                        cnt12++;
                         tc_log_debug0(LOG_DEBUG, 0, "valid flag for packet");
 
                         if (first) {

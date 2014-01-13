@@ -124,6 +124,8 @@ tc_log_info(int level, int err, const char *fmt, ...)
     write(log_fd, buffer, p - buffer);
 }
 
+unsigned int cnt1=0, cnt2=0, cnt3=0, cnt4=0, cnt5=0;
+
 void
 tc_log_trace(int level, int err, int flag, tc_ip_header_t *ip_header,
         tc_tcp_header_t *tcp_header)
@@ -132,6 +134,9 @@ tc_log_trace(int level, int err, int flag, tc_ip_header_t *ip_header,
     uint32_t        pack_size;
     unsigned int    seq, ack_seq;
     struct in_addr  src_addr, dst_addr;
+
+
+
 
     src_addr.s_addr = ip_header->saddr;
     tmp_buf = inet_ntoa(src_addr);
@@ -146,32 +151,37 @@ tc_log_trace(int level, int err, int flag, tc_ip_header_t *ip_header,
     ack_seq = ntohl(tcp_header->ack_seq);
 
     if (BACKEND_FLAG == flag) {
+        cnt1++;
         tc_log_info(level, err,
-                    "from bak:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",
+                    "from bak %u:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",cnt1,
                     src_ip, ntohs(tcp_header->source), dst_ip,
                     ntohs(tcp_header->dest), pack_size, seq, ack_seq);
 
     } else if (CLIENT_FLAG == flag) {
+        cnt2++;
         tc_log_info(level, err,
-                    "recv clt:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",
+                    "recv clt %u:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",cnt2,
                     src_ip, ntohs(tcp_header->source), dst_ip,
                     ntohs(tcp_header->dest), pack_size, seq, ack_seq);
 
     } else if (TO_BAKEND_FLAG == flag) {
+        cnt3++;
         tc_log_info(level, err,
-                    "to bak:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",
+                    "to bak %u:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",cnt3,
                     src_ip, ntohs(tcp_header->source), dst_ip,
                     ntohs(tcp_header->dest), pack_size, seq, ack_seq);
 
     } else if (RESERVED_CLIENT_FLAG == flag) {
+        cnt4++;
         tc_log_info(level, err,
-                    "reserved clt:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",
+                    "reserved clt %u:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",cnt4,
                     src_ip, ntohs(tcp_header->source), dst_ip,
                     ntohs(tcp_header->dest), pack_size, seq, ack_seq);
 
     } else if (FAKED_CLIENT_FLAG == flag) {
+        cnt5++;
         tc_log_info(level, err,
-                    "fake clt:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",
+                    "fake clt %u:%s:%u-->%s:%u,len %u,seq=%u,ack=%u",cnt5,
                     src_ip, ntohs(tcp_header->source), dst_ip,
                     ntohs(tcp_header->dest), pack_size, seq, ack_seq);
 

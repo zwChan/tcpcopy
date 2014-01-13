@@ -23,5 +23,6 @@ void tc_time_init();
 void tc_time_update(void);
 void tc_localtime(time_t sec, struct tm *tm);
 void tc_time_sig_alarm(int sig);
+int gettimeofday(struct timeval*tv, struct timezone *tz);
 
 #endif /* TC_TIME_INCLUDED */
