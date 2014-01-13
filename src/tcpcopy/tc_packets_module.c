@@ -7,9 +7,13 @@ uint16_t              ip_tf_cnt = 0;
 #if (TCPCOPY_OFFLINE)
 static bool           read_pcap_over = false;
 static time_t         read_pcap_over_time;
-static uint64_t       accumulated_diff = 0, adj_v_pack_diff = 0;
-static struct timeval first_pack_time, last_v_pack_time,
-                      last_pack_time, base_time, cur_time;
+static uint64_t       accumulated_diff = 0, //accumulated_diff += adj_v_pack_diff
+				      adj_v_pack_diff = 0; // adj_v_pack_diff = last_pack_time-last_v_pack_time
+static struct timeval first_pack_time,    // first packet of pcap
+                      last_v_pack_time,// last valid packet timestamp
+                      last_pack_time, 
+                      base_time,  //timestamp of init tcpcopy
+                      cur_time;   // current time
 #endif
 
 #if (TCPCOPY_PCAP)
@@ -220,6 +224,10 @@ pcap_retrieve(unsigned char *args, const struct pcap_pkthdr *pkt_hdr,
     if (l2_len != ETHERNET_HDR_LEN) {
         if (l2_len > ETHERNET_HDR_LEN) {
            ip_data = get_ip_data(pcap, frame, pkt_hdr->len, &l2_len); 
+		   if (ip_data == NULL){
+			   	tc_log_info(LOG_WARN, 0, "get ip-data fail.");
+				return;
+		   }
            frame = ip_data - ETHERNET_HDR_LEN;
            frame_len = frame_len - l2_len + ETHERNET_HDR_LEN;
         } else if (l2_len == 0) {
@@ -299,6 +307,7 @@ process_packet(bool backup, unsigned char *frame, int frame_len)
         return process_in(frame);
     } else {
         memcpy(tmp, frame, frame_len);
+        tc_log_debug1(LOG_DEBUG, 0, "process_in len=%u",frame_len);
 
         return process_in(tmp);
     }
@@ -423,6 +432,7 @@ dispose_packet(unsigned char *frame, int frame_len, int ip_recv_len,
     packet = frame + ETHERNET_HDR_LEN;
 
     if (is_packet_needed(packet)) {
+        tc_log_debug0(LOG_DEBUG, 0, "is_packet_needed");
 
         replica_num = clt_settings.replica_num;
         ip_header   = (tc_ip_header_t *) packet;
@@ -435,6 +445,7 @@ dispose_packet(unsigned char *frame, int frame_len, int ip_recv_len,
          * If the packet length is larger than MTU, we split it. 
          */
         if (ip_recv_len > clt_settings.mtu) {
+            tc_log_debug0(LOG_DEBUG, 0, "(ip_recv_len > clt_settings.mtu)");
 
             /* calculate number of packets */
             size_ip     = ip_header->ihl << 2;
@@ -442,6 +453,7 @@ dispose_packet(unsigned char *frame, int frame_len, int ip_recv_len,
             if (tot_len != ip_recv_len) {
                 tc_log_info(LOG_WARN, 0, "packet len:%u, recv len:%u",
                             tot_len, ip_recv_len);
+                tc_log_debug0(LOG_DEBUG, 0, "(tot_len != ip_recv_len)");
                 return TC_ERROR;
             }
 
@@ -497,6 +509,8 @@ dispose_packet(unsigned char *frame, int frame_len, int ip_recv_len,
             } else {
 
                 packet_valid = process_packet(false, frame, frame_len);
+                
+                tc_log_debug1(LOG_DEBUG, 0, "packet_valid=%u",packet_valid);
             }
         }
     }
@@ -660,8 +674,8 @@ send_packets_from_pcap(int first)
                         last_pack_time.tv_usec / 1000; 
 
                     ip_pack_len = pkt_hdr.len - l2_len;
-                    tc_log_debug2(LOG_DEBUG, 0, "frame len:%d, ip len:%d",
-                            pkt_hdr.len, ip_pack_len);
+                    //tc_log_debug2(LOG_DEBUG, 0, "frame len:%d, ip len:%d",
+                     //       pkt_hdr.len, ip_pack_len);
                     frame = ip_data - ETHERNET_HDR_LEN;
                     dispose_packet(frame, ip_pack_len + ETHERNET_HDR_LEN,
                             ip_pack_len, &p_valid_flag);
@@ -684,6 +698,7 @@ send_packets_from_pcap(int first)
 
                     } else {
                         tc_log_debug0(LOG_DEBUG, 0, "invalid flag");
+                        //tc_log_debug0(LOG_DEBUG, 0, "aaaaaa");
                     }
                 }
             }

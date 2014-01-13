@@ -143,11 +143,13 @@ tc_msg_event_process(tc_event_t *rev)
 void
 interception_output_stat(tc_event_timer_t *evt)
 {
+    /*
     tc_log_info(LOG_NOTICE, 0, 
-            "total resp packs:%llu, all:%llu, route:%llu",
+            "b total resp packs:%llu, all:%llu, route:%llu",
             tot_copy_resp_packs, tot_resp_packs, tot_router_items);
+            */
 #if (!TCPCOPY_SINGLE)
-    router_stat();
+   // router_stat();
     delay_table_delete_obsolete(tc_time());
 #endif
     evt->msec = tc_current_time_msec + OUTPUT_INTERVAL;

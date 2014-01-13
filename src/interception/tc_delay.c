@@ -31,7 +31,7 @@ delay_table_delete_obsolete(time_t cur_time)
     link_list   *msg_list, *l;
     p_link_node  ln, tail;
 
-    tc_log_info(LOG_NOTICE, 0, "delay total:%u", table->total);
+    //tc_log_info(LOG_NOTICE, 0, "delay total:%u", table->total);
 
     for (i = 0; i < table->size; i++) {
         l  = table->lists[i];
@@ -66,7 +66,7 @@ delay_table_delete_obsolete(time_t cur_time)
         } 
     }
 
-    tc_log_info(LOG_NOTICE, 0, "delay delete obsolete :%d", count);
+   // tc_log_info(LOG_NOTICE, 0, "delay delete obsolete :%d", count);
 }
 
 

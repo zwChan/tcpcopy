@@ -3440,6 +3440,7 @@ is_packet_needed(unsigned char *packet)
     bool              is_needed = false;
     uint16_t          size_ip, size_tcp, tot_len, cont_len, header_len, 
                       key, frag_off;
+    int bbbbb = 0;
 #if (TCPCOPY_MYSQL_ADVANCED)
     uint64_t          sess_key; 
     session_t        *s;
@@ -3480,8 +3481,9 @@ is_packet_needed(unsigned char *packet)
     }
 
     /* filter the packets we do care about */
-    if (LOCAL == check_pack_src(&(clt_settings.transfer), 
-                ip_header->daddr, tcp_header->dest, CHECK_DEST)) {
+    bbbbb=check_pack_src(&(clt_settings.transfer), 
+                ip_header->daddr, tcp_header->dest, CHECK_DEST);
+    if (LOCAL == bbbbb) {
         if (clt_settings.target_localhost) {
             if (ip_header->saddr != LOCALHOST) {
                 tc_log_info(LOG_WARN, 0, "not localhost source ip address");
@@ -3524,7 +3526,10 @@ is_packet_needed(unsigned char *packet)
             tc_log_info(LOG_WARN, 0, "bad tot_len:%d bytes, header len:%d",
                     tot_len, header_len);
         }
-    } 
+    } else
+    {
+        //tc_log_info(LOG_WARN, 0, "bbbbb:%d", bbbbb);
+    }
 
     return is_needed;
 
@@ -3543,6 +3548,8 @@ output_stat()
     if (start_p_time == 0) {
         return;
     }
+
+return;
 
     tc_log_info(LOG_NOTICE, 0, "active:%u,rel reqs:%llu,obs del:%llu",
             sessions_table->total, leave_cnt, obs_cnt);
@@ -3591,7 +3598,7 @@ void
 tc_interval_dispose(tc_event_timer_t *evt)
 {
     /* output stat */
-    output_stat();
+    //output_stat();
 
     /* clear timeout sessions */
     clear_timeout_sessions();

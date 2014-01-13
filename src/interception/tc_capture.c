@@ -141,7 +141,7 @@ void
 interception_output_stat(tc_event_timer_t *evt)
 {
     tc_log_info(LOG_NOTICE, 0, 
-            "total resp packs:%llu, all:%llu, route:%llu",
+            "a total resp packs:%llu, all:%llu, route:%llu",
             tot_copy_resp_packs, tot_resp_packs, tot_router_items);
 #if (!TCPCOPY_SINGLE)
     router_stat();
