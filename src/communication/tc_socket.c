@@ -708,17 +708,15 @@ tc_socket_cmb_recv(int fd, int *num, char *buffer)
 
         if (n == -1) {
             if (errno == EAGAIN || errno == EINTR) {
-                if (errno == EAGAIN || errno == EINTR) {
-                    if (cnt > MAX_RW_TRIES && is_socket_timeout(&tv_begin)) {
-                        tc_log_info(LOG_ERR, 0, "recv timeout,fd:%d", fd);
-                        return TC_ERROR;
-                    }
-                    cnt++;
-                    continue;
-                } else {
-                    tc_log_info(LOG_NOTICE, errno, "return -1,fd:%d", fd);
+                if (cnt > MAX_RW_TRIES && is_socket_timeout(&tv_begin)) {
+                    tc_log_info(LOG_ERR, 0, "recv timeout,fd:%d", fd);
                     return TC_ERROR;
                 }
+                cnt++;
+                continue;
+            } else {
+                tc_log_info(LOG_NOTICE, errno, "return -1,fd:%d", fd);
+                return TC_ERROR;
             }
         }
 
