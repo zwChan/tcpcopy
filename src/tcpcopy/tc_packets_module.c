@@ -2,7 +2,7 @@
 #include <xcopy.h>
 #include <tcpcopy.h>
 
-uint32_t              ip_tf[65536];
+uint32_t              ip_tf[M_IP_NUM];
 uint16_t              ip_tf_cnt = 0;
 #if (TCPCOPY_OFFLINE)
 static bool           read_pcap_over = false;
@@ -11,7 +11,7 @@ static uint64_t       accumulated_diff = 0, //accumulated_diff += adj_v_pack_dif
 				      adj_v_pack_diff = 0; // adj_v_pack_diff = last_pack_time-last_v_pack_time
 static struct timeval first_pack_time,    // first packet of pcap
                       last_v_pack_time,// last valid packet timestamp
-                      last_pack_time, 
+                      last_pack_time, /*in fact, is the current pkt timestamp*/
                       base_time,  //timestamp of init tcpcopy
                       cur_time;   // current time
 #endif
@@ -50,7 +50,8 @@ static uint32_t
 get_tf_ip(uint16_t key) {
 
     if (ip_tf[key] == 0) {
-        ip_tf[key] = clt_settings.clt_tf_ip[ip_tf_cnt++];
+        ip_tf[key] = clt_settings.clt_tf_ip + ip_tf_cnt;
+        ip_tf_cnt++;
         if (ip_tf_cnt >= clt_settings.clt_tf_ip_num) {
             ip_tf_cnt = 0;
         }
@@ -634,6 +635,7 @@ check_read_stop()
 }
 
 unsigned int cnt10=0,cnt11=0,cnt12=0;
+extern int cnt_save,cnt_uack;
 
 
 static void 
@@ -687,7 +689,7 @@ send_packets_from_pcap(int first)
                             ip_pack_len, &p_valid_flag);
 
                     cnt11++;
-                    tc_log_info(LOG_WARN, 0, "pcap send %u:%u:%u: len is %d,vliad=%u",cnt12, cnt11,cnt10,pkt_hdr.len,p_valid_flag);
+                    tc_log_info(LOG_WARN, 0, "pcap send %u:%u:%u,save %d,uack %d, len %d,vliad %u",cnt12, cnt11,cnt10,cnt_save,cnt_uack,pkt_hdr.len,p_valid_flag);
 
                     if (p_valid_flag) {
 
@@ -716,6 +718,7 @@ send_packets_from_pcap(int first)
         } else {
 
             tc_log_info(LOG_NOTICE, 0, "stop, null from pcap_next");
+            tc_log_info(LOG_WARN, 0, "pcap send %u:%u:%u,save %u len is %d,vliad=%u",cnt12, cnt11,cnt10,cnt_save,pkt_hdr.len,p_valid_flag);
             stop = true;
             read_pcap_over = true;
             read_pcap_over_time = tc_time();

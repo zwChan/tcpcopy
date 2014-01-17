@@ -77,7 +77,7 @@ typedef struct xcopy_clt_settings {
     uint16_t      srv_port;            /* server listening port */
     char         *raw_clt_tf_ip;        
     uint16_t      clt_tf_ip_num;       
-    uint32_t      clt_tf_ip[M_IP_NUM]; /* ip address from clt to target ip */
+    uint32_t      clt_tf_ip; /* ip address from clt to target ip: the first ip, and the offset is clt_tf_ip_num. */
 #ifdef TCPCOPY_MYSQL_ADVANCED
     char         *user_pwd;            /* user password string for mysql */
 #endif

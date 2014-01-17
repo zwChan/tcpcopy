@@ -62,10 +62,10 @@ usage(void)
 #endif
     printf("-c <ip_addr,>  change the client IP to one of IP addresses when sending to the\n"
            "               target server. For example,\n"
-           "               './tcpcopy -x 8080-192.168.0.2:8080 -c 192.168.0.1' would copy\n"
+           "               './tcpcopy -x 8080-192.168.0.2:8080 -c 192.168.0.1:100' would copy\n"
            "               requests from port '8080' of current online server to the target port\n"
-           "               '8080' of target server '192.168.0.2' and modify the client IP to be\n"
-           "               '192.168.0.1'.\n");
+           "               '8080' of target server '192.168.0.2' and modify the client IP to be one of \n"
+           "               '192.168.0.1' to '192.168.0.101'.\n");
 #if (TCPCOPY_OFFLINE)
     printf("-i <file>      set the pcap file used for tcpcopy to <file> (only valid for the\n"
            "               offline version of tcpcopy when it is configured to run at\n"
@@ -112,7 +112,7 @@ usage(void)
     printf("-f <num>       use this parameter to control the port number modification process\n"
            "               and reduce port conflications when multiple tcpcopy instances are\n"
            "               running. The value of <num> should be different for different tcpcopy\n"
-           "               instances. The maximum value allowed is 1023.\n");
+           "               instances. The maximum value allowed is 255.\n");
     printf("-m <num>       set the maximum memory allowed to use for tcpcopy in megabytes, \n"
            "               to prevent tcpcopy occupying too much memory and influencing the\n"
            "               online system. When the memory exceeds this limit, tcpcopy would quit\n"
@@ -696,40 +696,35 @@ extract_filter()
 static int 
 retrieve_clt_tf_ips() 
 {
-    int          count = 0;
+    int          count = 1;
     char        *split, *p;
     uint32_t     ip;
 
     p = clt_settings.raw_clt_tf_ip;
 
-    while (true) {
-        split = strchr(p, ',');
-        if (split != NULL) {
-            *split = '\0';
-        }
+    split = strchr(p, ':');
+    if (split != NULL) {
+        *split = '\0';
+    }else{
+        count=1;
+    }
 
-        ip = inet_addr(p);
+    ip = inet_addr(p);
 
-        if (split != NULL) {
-            *split = ',';
-        }
+    clt_settings.clt_tf_ip = ip;
 
-        clt_settings.clt_tf_ip[count++] = ip;
-
-        if (count == M_IP_NUM) {
-            tc_log_info(LOG_WARN, 0, "reach the limit for clt_tf_ip");
-            break;
-        }
-
-        if (split == NULL) {
-            break;
-        } else {
-            p = split + 1;
-        }
-
+    if (split != NULL){
+        p = split + 1;
+        count = atoi(p);
+    }
+    
+    if (count > M_IP_NUM) {
+        tc_log_info(LOG_WARN, 0, "reach the limit for clt_tf_ip");
+        return 1;
     }
 
     clt_settings.clt_tf_ip_num = count;
+    tc_log_info(LOG_WARN, 0, "first ip %#X, clt_tf_ip_num=%d",ip,count);
 
     return 1;
 }
