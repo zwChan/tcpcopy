@@ -48,6 +48,8 @@
 #include <openssl/evp.h>
 #endif
 
+#define TCPCOPY_DEBUG 1
+
 #if (INTERCEPT_ADVANCED)
 #define TCPCOPY_DR 1
 #endif
@@ -354,6 +356,8 @@ typedef struct connections_s{
 #else
 #define INTERCEPT_TIMER_INTERVAL 100
 #endif
+
+extern int dbg_level;
 
 /* global functions */
 int daemonize();

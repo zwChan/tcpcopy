@@ -1,6 +1,7 @@
 
 #include <xcopy.h>
 
+int dbg_level = 0;
 static int log_fd = -1;
 
 typedef struct {
@@ -80,6 +81,8 @@ tc_log_info(int level, int err, const char *fmt, ...)
     char            buffer[LOG_MAX_LEN], *p;
     va_list         args;
     tc_log_level_t *ll;
+
+    if (!dbg_level)return;
 
     if (log_fd == -1) {
         return;

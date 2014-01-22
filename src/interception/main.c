@@ -203,6 +203,7 @@ usage(void)
     printf("-F <filter>    user filter(same as pcap filter)\n");
 #endif
     printf("-o <target>    set the target for capturing response packets.\n");
+    printf("-D <type>      debug switch. 0:disable, others number: enable\n");
 #endif
 #if (TCPCOPY_SINGLE)
     printf("-c             set connections protected\n");
@@ -234,6 +235,7 @@ read_args(int argc, char **argv) {
          "F:" /* <filter> */
 #endif
          "o:" /* target addresses */
+         "D:"  /* debug leve */
 #endif
          "h"  /* print this help and exit */
          "l:" /* error log file path */
@@ -270,6 +272,9 @@ read_args(int argc, char **argv) {
 #endif
             case 'o':
                 srv_settings.raw_targets = optarg;
+                break;
+            case 'D':
+                dbg_level = atoi(optarg);
                 break;
 #endif
             case 's':
@@ -322,6 +327,10 @@ read_args(int argc, char **argv) {
                         fprintf(stderr, "intercept: option -%c require a number\n", 
                                 optopt);
                         break;
+                        case 'D':
+                            fprintf(stderr, "tcpcopy: option -%c require debug switch(number). 0:disable, others number: enable\n", 
+                                    optopt);
+                            break;
 
                     default:
                         fprintf(stderr, "intercept: illegal argument \"%c\"\n", 

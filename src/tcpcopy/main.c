@@ -137,6 +137,7 @@ usage(void)
            "-r <num>       set the percentage of sessions transfered (integer range:1~100)\n"
            "-p <num>       set the target server listening port. The default value is 36524.\n");
     printf("-P <file>      save PID in <file>, only used with -d option\n");
+    printf("-D <type>      debug switch. 0:disable, others number: enable\n");
 #if (TCPCOPY_DR)
     printf("-L             lonely for tcpcopy when intercept is closed\n");
 #endif
@@ -187,6 +188,7 @@ read_args(int argc, char **argv)
 #endif
          "l:" /* error log file */
          "P:" /* save PID in file */
+         "D:"  /* debug leve */
 #if (TCPCOPY_DR)
          "L"  /* lonely */
 #endif
@@ -283,6 +285,9 @@ read_args(int argc, char **argv)
             case 'p':
                 clt_settings.srv_port = atoi(optarg);
                 break;
+            case 'D':
+                dbg_level = atoi(optarg);
+                break;
             case 'P':
                 clt_settings.pid_file = optarg;
                 break;
@@ -345,6 +350,10 @@ read_args(int argc, char **argv)
                     case 't':
                     case 'k':
                     case 'p':
+                    case 'D':
+                        fprintf(stderr, "tcpcopy: option -%c require debug switch(number). 0:disable, others number: enable\n", 
+                                optopt);
+                        break;
                     case 'r':
                         fprintf(stderr, "tcpcopy: option -%c require a number\n",
                                 optopt);
