@@ -3460,6 +3460,74 @@ restore_buffered_next_session(session_t *s)
 }
 
 
+int enable_replace_pkt = false;
+uint64_t modify_pkt_cnt       = 0;
+extern int cnt10;
+char* find_sub_array(const char *s1, int len1, const char *s2, int len2)  
+{  
+    int n1=0,n2;
+	 
+    if (!s1||!s2||len1<=0||len2>len1||len2<0)return 0;
+ 
+    while (n1<=len1-len2)  
+    {  
+        for (n2=0; n2<len2 && *(s1 + n2) == *(s2 + n2); n2++);
+        if (n2==len2) return s1;  
+        s1++; 
+        n1++; 
+    }  
+
+   return 0;
+}  
+
+/* Find the s array s then replay it to d. */
+char* replalce_sub_array(const char *packet, int pkt_len, const char *s, const char *d, int len)  
+{
+    char* pos;
+    
+    pos = find_sub_array(packet,pkt_len,s,len);
+    if (0 != pos) 
+    {
+        modify_pkt_cnt++;
+        memcpy(pos,d,len);
+        tc_log_info(LOG_WARN, 0, "packet %d is modify: %s -> %s!",
+                cnt10,s, d);
+    }
+
+    return pos;
+}
+
+struct replace_pkt_map {
+    char* token;
+    char* replace_to;
+};
+
+struct replace_pkt_map replace_token[] =
+{   
+    {
+    "findMerchantIds",
+    "xxxxxxxxxxxxxxx",
+    },
+    /*{
+    "indSo",
+    "xxxxx",
+    },
+    */
+};
+void modify_pkt(unsigned char *packet, int pkt_len)
+{
+    int i = 0;
+    
+    if (!enable_replace_pkt)return;
+    
+    for (i=0; i<sizeof(replace_token)/sizeof(struct replace_pkt_map); i++)
+    {
+        (void)replalce_sub_array(packet,pkt_len,replace_token[i].token,replace_token[i].replace_to,strlen(replace_token[i].token));
+    }
+}
+
+
+
 /*
  * filter packets 
  */
@@ -3547,6 +3615,15 @@ is_packet_needed(unsigned char *packet)
 #endif
                 cont_len  = tot_len - header_len;
                 if (cont_len > 0) {
+                    /*
+                                if (enable_replace_pkt == true && find_sub_array((char*)(tcp_header+1),cont_len,"findMerchantIdsCanDiscussForMm",strlen("findMerchantIdsCanDiscussForMm")))
+                                {
+                                    //clt_dropped_cnt++;
+                                    is_needed = false;
+                                    return is_needed;
+                                }
+                                */
+                    modify_pkt((char*)(tcp_header+1), cont_len);
                     clt_cont_cnt++;
                 }
             }

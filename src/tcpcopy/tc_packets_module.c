@@ -634,10 +634,58 @@ check_read_stop()
     return false;
 }
 
+/*get pcap file has the same prefix,and the suffix is increase number.*/
+pcap_t* get_next_file()
+{
+    char *cur_file=clt_settings.pcap_file;
+    char suffix[256]={0};
+    char ebuf[PCAP_ERRBUF_SIZE];
+    int len,i,cur_index,pos;
+    
+    if (!cur_file)return NULL;
+    len = strlen(cur_file);
+    if (!len)return NULL;
+
+    
+    /*find digit suffix */
+    for(i=len-1;i>=0;i--){
+        if (cur_file[i]<'0' || cur_file[i]>'9'){
+            break;
+        }
+    }
+    pos = i+1;
+    if (pos>=len)return NULL;
+
+    memcpy(suffix,cur_file+pos,len-pos);
+    cur_index=atoi(suffix);
+    memset(suffix,0,256);
+    //itoa(cur_index+1,suffix,10);
+    sprintf(suffix,"%u",cur_index+1);
+
+    if (0==strlen(suffix))return NULL;
+    if (len-pos<strlen(suffix))return NULL; /*for overflow*/
+
+    for(i=strlen(suffix);i>0;){
+        cur_file[--len] = suffix[--i];
+    }
+
+    if ((clt_settings.pcap = pcap_open_offline(cur_file, ebuf)) == NULL) {
+        tc_log_info(LOG_ERR, 0, "open %s" , ebuf);
+        fprintf(stderr, "open %s\n", ebuf);
+        return NULL;
+    }
+    
+    tc_log_info(LOG_NOTICE, 0, "open next pcap file success:%s", cur_file);
+
+    return clt_settings.pcap;
+    
+}
+
+
+
 unsigned int cnt10=0,cnt11=0,cnt12=0;
 extern int cnt_save,cnt_uack;
-
-
+extern uint64_t modify_pkt_cnt;
 static void 
 send_packets_from_pcap(int first)
 {
@@ -716,9 +764,12 @@ send_packets_from_pcap(int first)
                 }
             }
         } else {
+            /*get next pcap file by the file name increase.*/
+            pcap = get_next_file();
+            if (pcap)continue;
 
             tc_log_info(LOG_NOTICE, 0, "stop, null from pcap_next");
-            tc_log_info(LOG_WARN, 0, "pcap send %u:%u:%u,save %u len is %d,vliad=%u",cnt12, cnt11,cnt10,cnt_save,pkt_hdr.len,p_valid_flag);
+            tc_log_info(LOG_WARN, 0, "pcap send %u:%u:%u,save %u len is %d,vliad=%u,mod=%u",cnt12, cnt11,cnt10,cnt_save,pkt_hdr.len,p_valid_flag,modify_pkt_cnt);
             stop = true;
             read_pcap_over = true;
             read_pcap_over_time = tc_time();
