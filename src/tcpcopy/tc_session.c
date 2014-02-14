@@ -3505,14 +3505,25 @@ struct replace_pkt_map {
 struct replace_pkt_map replace_token[] =
 {   
     {
-    "findMerchantIds",
-    "xxxxxxxxxxxxxxx",
+    "findMerchantIdsCanDiscussForMm410",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     },
-    /*{
-    "indSo",
-    "xxxxx",
+    
+    {
+    "findSoItemListWithFieldsNoHistory",
+    "findSoItemListWithFieldsxxxxxxxxx",
     },
-    */
+    
+    {
+    "findInfoBySoIdListOrOrderCodeListForMyYhd",
+    "findInfoBySoIdListOrOrderCodeListxxxxxxxx",
+    },
+    
+    {
+    "findUnCommentOrderListByUserIdForMyYhd",
+    "findUnCommentOrderListByUserIdxxxxxxxx",
+    },
+
 };
 void modify_pkt(unsigned char *packet, int pkt_len)
 {
@@ -3522,7 +3533,10 @@ void modify_pkt(unsigned char *packet, int pkt_len)
     
     for (i=0; i<sizeof(replace_token)/sizeof(struct replace_pkt_map); i++)
     {
-        (void)replalce_sub_array(packet,pkt_len,replace_token[i].token,replace_token[i].replace_to,strlen(replace_token[i].token));
+        if(replalce_sub_array(packet,pkt_len,replace_token[i].token,replace_token[i].replace_to,strlen(replace_token[i].token)))
+        {
+            //memset(packet,0,pkt_len);
+        }
     }
 }
 

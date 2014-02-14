@@ -50,7 +50,7 @@ static uint32_t
 get_tf_ip(uint16_t key) {
 
     if (ip_tf[key] == 0) {
-        ip_tf[key] = clt_settings.clt_tf_ip + ip_tf_cnt;
+        ip_tf[key] = clt_settings.clt_tf_ip + htonl(ip_tf_cnt);
         ip_tf_cnt++;
         if (ip_tf_cnt >= clt_settings.clt_tf_ip_num) {
             ip_tf_cnt = 0;
