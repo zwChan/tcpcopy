@@ -1,29 +1,26 @@
--------------------begin: Modify by zwChan------------
-1. 
-solved a socket problem.
-Revision: db25c0997b15eacb72addb9910aabb7dcf4fa475
-Date: 2014/1/13 18:45:30
-when read/write socket returning EAGAIN/EINTR, try MAX_RW_TRIES times is not enough. (try 1024 times use less than 1ms on my computer).  now it return timeout when another condition is present: used more than SOCKET_RW_TIME_OUT time, and SOCKET_RW_TIME_OUT=3s.
-2. 
-change the -c option of client to support a range of ipaddress. 
-Revision: 378efb70a3eb99b944f5486407f8826860d44cbb
-Date: 2014/1/17 13:53:54
-Modify the -c param.
-now the -c param can specify a range of ip address, such as -c 192.168.0.1:100, that means change the source-ip to one of the ip range: 192.168.0.1-192.168.0.100.
+#----begin: Modify by zwChan----
+#1. 
+>solved a socket problem.
+>Revision: db25c0997b15eacb72addb9910aabb7dcf4fa475
+>Date: 2014/1/13 18:45:30
+>when read/write socket returning EAGAIN/EINTR, try MAX_RW_TRIES times is not enough. (try 1024 times use less than 1ms on my computer).  now it return timeout when another condition is present: used more than SOCKET_RW_TIME_OUT time, and SOCKET_RW_TIME_OUT=3s.
+#2. 
+>change the -c option of client to support a range of ipaddress. 
+>Revision: 378efb70a3eb99b944f5486407f8826860d44cbb
+>Date: 2014/1/17 13:53:54
+>Modify the -c param.
+>now the -c param can specify a range of ip address, such as -c 192.168.0.1:100, that means change the source-ip to one of the ip range: 192.168.0.1-192.168.0.100.
 and add some debug info about save packets and uack packets.
-3.
-add a debug switch param -D instead of open debugging when compile.
-Revision: e6d7dca6f31feb78171c5687ee2eeb58d85d978f
-Date: 2014/1/22 13:05:25
-add a debug switch param -D instead of open debugging when compile.
-4.
-add a feature that tcpcopy can replay process more than one pcap-file. the files should be created by tcpdump using -W -C option.
-notice: file names should has the same length. such as cap00/cap01/.../cap09/cap10 is ok, but cap0/cap1/.../cap9/cap10/cap11 will stop at file "cap10".
+#3.
+>add a debug switch param -D instead of open debugging when compile.
+>Revision: e6d7dca6f31feb78171c5687ee2eeb58d85d978f
+>Date: 2014/1/22 13:05:25
+>add a debug switch param -D instead of open debugging when compile.
+#4.
+>add a feature that tcpcopy can replay process more than one pcap-file. the files should be created by tcpdump using -W -C option.
+>notice: file names should has the same length. such as cap00/cap01/.../cap09/cap10 is ok, but cap0/cap1/.../cap9/cap10/cap11 will stop at file "cap10".
 
-
-
-
--------------------end: Modify by zwChan------------
+#----end: Modify by zwChan----
 
 
 #[TCPCopy](https://github.com/wangbin579/tcpcopy) - A TCP Stream Replay Tool
