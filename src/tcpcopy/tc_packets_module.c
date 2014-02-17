@@ -554,6 +554,8 @@ tc_offline_init(tc_event_loop_t *event_loop, char *pcap_file)
         return TC_ERROR;
     }
 
+    load_replace_token("token.txt");
+    
     gettimeofday(&base_time, NULL);
     tc_log_info(LOG_NOTICE, 0, "open pcap success:%s", pcap_file);
     tc_log_info(LOG_NOTICE, 0, "send the first packets here");

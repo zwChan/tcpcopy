@@ -3480,6 +3480,18 @@ char* find_sub_array(const char *s1, int len1, const char *s2, int len2)
    return 0;
 }  
 
+#define MAX_TOKEN_LEN 255
+#define MAX_TOKEN_NUM 64
+struct replace_pkt_map {
+    char token[MAX_TOKEN_LEN];
+    char replace_to[MAX_TOKEN_LEN];
+    int cnt;
+};
+int replace_token_num = 0;
+struct replace_pkt_map replace_token[MAX_TOKEN_NUM]={0};
+/*it is token to make make sure the type of processing packet is right.*/
+char prefix_token[MAX_TOKEN_LEN]={0};
+
 /* Find the s array s then replay it to d. */
 char* replalce_sub_array(const char *packet, int pkt_len, const char *s, const char *d, int len)  
 {
@@ -3497,47 +3509,108 @@ char* replalce_sub_array(const char *packet, int pkt_len, const char *s, const c
     return pos;
 }
 
-struct replace_pkt_map {
-    char* token;
-    char* replace_to;
-};
+/* get the replace token in the specified file.*/
+void load_replace_token(char* file)
+{
+    FILE *fp;
+    char arr1[MAX_TOKEN_LEN+1];
+    char arr2[MAX_TOKEN_LEN+1];
+    char is_first_line=1;
 
-struct replace_pkt_map replace_token[] =
-{   
-    {
-    "findMerchantIdsCanDiscussForMm410",
-    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    },
+    if (!file || !strlen(file))return;
     
+    if ((fp = fopen (file, "r")) == NULL)
     {
-    "findSoItemListWithFieldsNoHistory",
-    "findSoItemListWithFieldsxxxxxxxxx",
-    },
+     perror (file);
+     perror ("File open error!\n");
+     return;
+    }
     
+    while (replace_token_num<MAX_TOKEN_NUM)
     {
-    "findInfoBySoIdListOrOrderCodeListForMyYhd",
-    "findInfoBySoIdListOrOrderCodeListxxxxxxxx",
-    },
-    
-    {
-    "findUnCommentOrderListByUserIdForMyYhd",
-    "findUnCommentOrderListByUserIdxxxxxxxx",
-    },
+         if ((fgets (arr1, MAX_TOKEN_LEN, fp)) != NULL )
+         {
+            int len = strlen(arr1);
+            //remove the \r\n 
+            if (len==0)break;
+            if (len>0&&arr1[len-1]=='\n'){arr1[len-1]=0;len--;}
+            if (len>0&&arr1[len-1]=='\r'){arr1[len-1]=0;len--;}
 
-};
+            //the first line is prefix_token; 
+            if (is_first_line){
+                strcpy(prefix_token,arr1);
+                is_first_line = 0;
+                continue;
+            }
+            
+            if (len==0)break;
+            strcpy(replace_token[replace_token_num].token,arr1);
+            memset(replace_token[replace_token_num].replace_to, 'x', len);
+            replace_token[replace_token_num].replace_to[len]=0;
+            replace_token_num++;
+         }
+         else
+         {
+            break;
+         }
+    }
+    
+    return ;
+    
+}
+
 void modify_pkt(unsigned char *packet, int pkt_len)
 {
     int i = 0;
+    int len = pkt_len>512?512:pkt_len; /* search no more than 512 B*/
+    char *pos1 = packet, *pos2=packet;
+    int prefix_len = 0;
     
-    if (!enable_replace_pkt)return;
+    /* Match a prefix token to make sure it is the right packet type firstly.*/
+    if (0 != prefix_token[0]){
+        prefix_len = strlen(prefix_token);
+        pos1 = find_sub_array(packet,len,prefix_token,prefix_len);
+        if (0 == pos1){
+            return;
+        }
+    } else {
+        if (0 == replace_token_num)return;
+    }
+
     
-    for (i=0; i<sizeof(replace_token)/sizeof(struct replace_pkt_map); i++)
+
+    /*/find the token.*/
+    for (i=0; i<replace_token_num; i++)
     {
-        if(replalce_sub_array(packet,pkt_len,replace_token[i].token,replace_token[i].replace_to,strlen(replace_token[i].token)))
-        {
-            //memset(packet,0,pkt_len);
+        pos2 = find_sub_array(pos1+prefix_len,len-prefix_len-(pos1-(char*)packet), replace_token[i].token,strlen(replace_token[i].token));
+        if (0 != pos2) {
+            tc_log_info(LOG_WARN, 0, "packet %d is keep", cnt10);
+            replace_token[i].cnt++;
+            break;
         }
     }
+
+    /*found non token, set the packet to all-0.
+         we supose the server donnot process this all-0 packet.*/
+    if (0 == pos2) {
+        modify_pkt_cnt++;
+        memset(packet,0,pkt_len);
+        tc_log_info(LOG_WARN, 0, "packet %d is modify to all-0", cnt10);
+    }
+
+    return;
+}
+
+void show()
+{
+    int i = 0;
+    
+    
+    for (i=0; i<replace_token_num; i++)
+    {
+            printf("cnt=%8u, src=%s, dst=%s\r\n",replace_token[i].cnt,replace_token[i].token,replace_token[i].replace_to);
+    }
+    printf("modify_pkt_cnt=%u",modify_pkt_cnt);
 }
 
 
