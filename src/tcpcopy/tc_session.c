@@ -3460,9 +3460,10 @@ restore_buffered_next_session(session_t *s)
 }
 
 
+unsigned int cnt10=0,cnt11=0,cnt12=0;
 int enable_replace_pkt = false;
 uint64_t modify_pkt_cnt       = 0;
-extern int cnt10;
+
 char* find_sub_array(const char *s1, int len1, const char *s2, int len2)  
 {  
     int n1=0,n2;

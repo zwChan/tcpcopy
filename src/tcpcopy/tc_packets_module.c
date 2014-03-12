@@ -685,7 +685,7 @@ pcap_t* get_next_file()
 
 
 
-unsigned int cnt10=0,cnt11=0,cnt12=0;
+extern unsigned int cnt10,cnt11,cnt12;
 extern int cnt_save,cnt_uack;
 extern uint64_t modify_pkt_cnt;
 static void 
